@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <data>
+        <record id="notify_form_view" model="ir.ui.view">
+            <field name="name">Quick Book Invoice</field>
+            <field name="priority" eval="6"/>
+            <field name="model">quick.book.invoice</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <div class="oe_title">
+                            <label for="name" string="e.g. Message"/>
+                            <h1>
+                                <field name="name" required="1" />
+                                <field name="file"  />
+<!--                                <field name="product_file"  />-->
+                            </h1>
+                        </div>
+                        <footer>
+                            <button name="action_notify" type="object" string="Import" class="btn btn-primary"
+                                    data-hotkey="i"/>
+                            <button string="Cancel" class="btn-secondary" special="cancel" data-hotkey="z"/>
+                        </footer>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record model="ir.actions.act_window" id="action_import_invoice">
+            <field name="name">Import</field>
+            <field name="res_model">quick.book.invoice</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+        </record>
+
+    </data>
+</odoo>

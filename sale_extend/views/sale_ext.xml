@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="server_action_model_account_move" model="ir.actions.server">
+        <field name="name">Register Payment Custom</field>
+        <field name="type">ir.actions.server</field>
+        <field name="state">code</field>
+        <field name="model_id" ref="model_account_move"/>
+        <field name="binding_model_id" ref="model_account_move"/>
+        <field name="code">
+            records.action_invoice_register_payment()
+        </field>
+    </record>
+
+    <record id="view_move_form_ext" model="ir.ui.view">
+        <field name="name">account.move.form.inherit</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_move_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <button string="Import Invoice"
+                        type="action" name="%(action_import_invoice)d"/>
+            </xpath>
+            <field name="invoice_date" position="after">
+                <field name="cs_shipping_date"/>
+                <field name="cs_shipping_method"/>
+                <field name="cs_invoice_number"/>
+            </field>
+        </field>
+    </record>
+    <record id="view_order_form_ext" model="ir.ui.view">
+        <field name="name">sale.order.form.inherit</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+
+            <field name="partner_id" position="attributes">
+                <attribute name="domain">[('parent_id', '=', False)]</attribute>
+            </field>
+            <field name="partner_invoice_id" position="attributes">
+                <attribute name="domain">['|', ('id', '=', partner_id), ('parent_id', '=', partner_id)]</attribute>
+            </field>
+            <field name="partner_shipping_id" position="attributes">
+                <attribute name="domain">['|', ('id', '=', partner_id), ('parent_id', '=', partner_id)]</attribute>
+            </field>
+        </field>
+    </record>
+
+
+    <record id="view_delivery_carrier_form" model="ir.ui.view">
+        <field name="name">delivery.carrier.website.form</field>
+        <field name="model">delivery.carrier</field>
+        <field name="inherit_id" ref="delivery.view_delivery_carrier_form"/>
+        <field name="arch" type="xml">
+            <field name="supports_shipping_insurance" position='after'>
+                <field name="is_default"/>
+            </field>
+
+        </field>
+    </record>
+
+    <record id="view_picking_withcarrier_out_form_inherit_delivery_ups" model="ir.ui.view">
+        <field name="name">stock.picking.form.inherit.ups</field>
+        <field name="model">stock.picking</field>
+        <field name="inherit_id" ref="stock_delivery.view_picking_withcarrier_out_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='carrier_id']" position="before">
+                <field name="load_carrier" invisible="1"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

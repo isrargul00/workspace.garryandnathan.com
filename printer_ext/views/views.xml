@@ -1,0 +1,81 @@
+<odoo>
+    <data>
+
+        <record model="ir.ui.view" id="printing_job_view_form">
+            <field name="name">printer.jobs.form</field>
+            <field name="model">printer.jobs</field>
+            <field name="arch" type="xml">
+                <form string="Job">
+                    <header>
+                        <field name="state" widget="statusbar"/>
+                    </header>
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="name"/>
+                                <field name="file"/>
+                            </group>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+        <record model="ir.ui.view" id="printing_job_view_tree">
+            <field name="name">printer.jobs.tree</field>
+            <field name="model">printer.jobs</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="name"/>
+                    <field name="state"/>
+                </tree>
+            </field>
+        </record>
+        <record model="ir.ui.view" id="printing_machine_config_view_tree">
+            <field name="name">machine.config.tree</field>
+            <field name="model">machine.config</field>
+            <field name="arch" type="xml">
+                <tree editable="bottom">
+                    <field name="value"/>
+                    <field name="key"/>
+                </tree>
+            </field>
+        </record>
+
+        <record model="ir.actions.act_window" id="printing_job_action">
+            <field name="name">Printer Jobs</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">printer.jobs</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+        <record model="ir.actions.act_window" id="printing_server_config_action">
+            <field name="name">Machine Config</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">machine.config</field>
+            <field name="view_mode">tree</field>
+        </record>
+
+
+        <menuitem
+                name="Printing"
+                id="printing_menu_ext"
+                sequence="1"
+                parent="base.menu_administration"
+                groups="printer_ext_group_admin"
+        />
+
+        <menuitem
+                name="Printer Jobs"
+                sequence="10"
+                id="printing_server_menu_ext"
+                parent="printing_menu_ext"
+                action="printing_job_action"
+        />
+        <menuitem
+                name="Machine Config"
+                sequence="10"
+                id="printing_server_config_ext"
+                parent="printing_menu_ext"
+                action="printing_server_config_action"
+        />
+    </data>
+</odoo>

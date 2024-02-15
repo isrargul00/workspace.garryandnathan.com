@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="ir_cron_repository" model="ir.cron">
+            <field name="name">Update Repo</field>
+            <field name="model_id" ref="odoo_sh_community.model_repository_repository"/>
+            <field name="state">code</field>
+            <field name="code">model._default_repository_ids()</field>
+            <field name="user_id" ref="base.user_admin"/>
+            <field name="interval_number">10</field>
+            <field name="interval_type">minutes</field>
+            <field name="numbercall">-1</field>
+        </record>
+
+        <record id="ir_cron_pull_repository" model="ir.cron">
+            <field name="name">Pull All Repo</field>
+            <field name="model_id" ref="odoo_sh_community.model_repository_repository"/>
+            <field name="state">code</field>
+            <field name="code">model.pull_all()</field>
+            <field name="user_id" ref="base.user_admin"/>
+            <field name="interval_number">1</field>
+            <field name="interval_type">minutes</field>
+            <field name="numbercall">-1</field>
+        </record>
+
+
+
+        <record id="main_panel_tool" model="panel.tool">
+            <field name="name">Panel Tool</field>
+        </record>
+
+        <record id="se_repo_management_addons_path" model="ir.config_parameter">
+            <field name="key">se_repository_mgmt.addons_path</field>
+            <field name="value">/mnt/extra-addons</field>
+        </record>
+        
+        <record id="se_repo_management_uploaded_modules_path" model="ir.config_parameter">
+            <field name="key">se_repository_mgmt.uploaded_modules_path</field>
+            <field name="value">/mnt/extra-addons/my-uploaded-modules</field>
+        </record>
+
+    </data>
+</odoo>
