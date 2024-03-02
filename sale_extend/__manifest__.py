@@ -15,6 +15,7 @@
         'security/ir.model.access.csv',
         'wizard/import_data.xml',
         'views/sale_ext.xml',
+        'views/so_template.xml',
         'report/purchase_order_templates.xml',
         'report/invoice.xml',
     ],

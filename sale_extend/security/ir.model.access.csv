@@ -1,2 +1,4 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_quick_book_invoice,quick.book.invoice,model_quick_book_invoice,,1,1,1,1
+access_so_template,so.template,model_so_template,,1,1,1,1
+access_so_template_linne,so.template.line,model_so_template_line,,1,1,1,1
