@@ -18,6 +18,7 @@
         'views/so_template.xml',
         'report/purchase_order_templates.xml',
         'report/invoice.xml',
+        'report/delivery.xml',
     ],
     'installable': True,
     'application': True,

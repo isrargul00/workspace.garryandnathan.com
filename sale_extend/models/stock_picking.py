@@ -20,3 +20,8 @@ class StcckPicking(models.Model):
             rec.load_carrier = False
             if not rec.carrier_id:
                 rec.carrier_id = self.env['delivery.carrier'].search([('is_default', '=', True)], limit=1)
+
+
+    def should_print_delivery_address(self):
+        self.ensure_one()
+        return self.move_ids and self.move_ids[0].partner_id and (self._is_to_external_location() or self.picking_type_code == 'internal')

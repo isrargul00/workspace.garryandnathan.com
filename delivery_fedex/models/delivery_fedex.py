@@ -351,8 +351,17 @@ class ProviderFedex(models.Model):
                     for pick in lognote_pickings:
                         pick.message_post(body=logmessage, attachments=attachments)
                     shipping_data = {'exact_price': carrier_price,
-                                     'tracking_number': ','.join(carrier_tracking_refs)}
+                                     'tracking_number': ','.join (carrier_tracking_refs)}
                     res = res + [shipping_data]
+
+
+                    # tracking custom
+                    # package.tacking_number = track
+                    for track , pack in zip(carrier_tracking_refs,[pl[0] for pl in package_labels]):
+                        pk = self.env['stock.quant.package'].search([('name','=',pack)],limit=1)
+                        if pk:
+                            pk.tacking_number = track
+                    # end here custom
 
             # TODO RIM handle if a package is not accepted (others should be deleted)
 

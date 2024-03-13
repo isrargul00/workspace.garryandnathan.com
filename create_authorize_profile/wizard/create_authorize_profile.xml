@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+
+    <record id="authorize_customer_profile_wizard" model="ir.ui.view">
+      <field name="name">Authorize Customer Profile Wizard</field>
+      <field name="model">create.authorize.profile.wizard</field>
+      <field name="type">form</field>
+      <field name="arch" type="xml">
+        <form string="New Customer Profile">
+          <sheet>
+            <group>
+              <group>
+                <field name="payment_type" attrs="{'required': True}"/>
+              </group>
+              <group>
+              </group>
+              <group string="Billing Information">
+                <field name="email"/>
+                <field name="first_name" attrs="{'required': True}"/>
+                <field name="last_name" attrs="{'required': True}"/>
+                <field name="street" attrs="{'required': True}"/>
+                <field name="city" attrs="{'required': True}"/>
+                <field name="state" attrs="{'required': True}"/>
+                <field name="zip" attrs="{'required': True}"/>
+              </group>
+              <group string="Card Information" attrs="{'invisible':[('payment_type','!=','creditCard')]}">
+                <field name="cc_number" attrs="{'required': [('payment_type','=', 'creditCard')]}"/>
+                <field name="expiration_date" placeholder="Must be in format YYYY-MM"
+                       invisible="1"/>
+                <label for="month" string="Expiration Date"/>
+                        <div>
+                            <label for="month" string="Month"/>
+                            <field name="month" attrs="{'required': [('payment_type','=', 'creditCard')]}"
+                                   class="oe_inline" style="width:110%%"/>
+                            <label for="year" string="Year"/>
+                            <field name="year" attrs="{'required': [('payment_type','=', 'creditCard')]}"
+                                   class="oe_inline"/>
+                        </div>
+              </group>
+              <group string="Account Information" attrs="{'invisible':[('payment_type','!=','bankAccount')]}">
+                <field name="bank_name" attrs="{'required': [('payment_type','=', 'bankAccount')]}"/>
+                <field name="account_number" attrs="{'required': [('payment_type','=', 'bankAccount')]}"/>
+                <field name="routing_number" attrs="{'required': [('payment_type','=', 'bankAccount')]}"/>
+                <field name="name_on_account" attrs="{'required': [('payment_type','=', 'bankAccount')]}"/>
+                <field name="account_type" attrs="{'required': [('payment_type','=', 'bankAccount')]}"/>
+              </group>
+              <group string="Important: Be sure to ensure billing zip code is correct!" colspan="4"
+                      attrs="{'invisible':[('payment_type','=',False)]}">
+              </group>
+            </group>
+          </sheet>
+          <footer>
+              <group>
+                <span>
+                    <button string="Create" type="object" class="oe_highlight" name="create_customer_profile"/>
+                    <button string="Cancel" class="oe_link" special="cancel" />
+                </span>
+              </group>
+          </footer>
+        </form>
+      </field>
+    </record>
+
+
+</odoo>

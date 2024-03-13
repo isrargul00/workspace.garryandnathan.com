@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="partner_form_authorize_profile_wizard" model="ir.ui.view">
+        <field name="name">Res Partner Form Authorize Profile Wizard Button</field>
+        <field name="model">res.partner</field>
+        <field name="type">form</field>
+        <field name="inherit_id" ref="base.view_partner_form" />
+        <field name="arch" type="xml">
+            <div name="button_box" position="inside">
+                <button class="oe_stat_button" type="object" name="action_authorize_wizard"
+                        groups="base.group_user" icon="fa-key" string="Authorize.net Profile">
+                </button>
+            </div>
+        </field>
+    </record>
+
+
+</odoo>

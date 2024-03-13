@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+
+    <template id="stock_report_delivery_package_section_line_inherit_delivery"
+              inherit_id="stock_delivery.stock_report_delivery_package_section_line_inherit_delivery">
+        <!--  Add additional Package section line info -->
+        <xpath expr="//td[@name='package_info']" position="inside">
+            <t t-if="package.shipping_weight or package.weight">
+                <!-- assume manually typed in value = priority -->
+                <t t-if="package.shipping_weight">
+                    <span> - Weight: </span>
+                    <span t-field="package.shipping_weight"/>
+                    <span t-field="package.weight_uom_name"/>
+                </t>
+                <!-- otherwise default to calculated value -->
+                <t t-else="">
+                    <span> - Weight (estimated): </span>
+                    <span t-field="package.weight"/>
+                    <span t-field="package.weight_uom_name"/>
+                </t>
+            </t>
+            <t t-if="package.package_type_id or package.tacking_number">
+                <t t-if="package.tacking_number">
+                    <span> - Tracking: </span>
+                    <span t-field="package.tacking_number"/>
+                </t>
+                <t t-if="package.package_type_id">
+                    <span> - Package Type: </span>
+                    <span t-field="package.package_type_id"/>
+                </t>
+            </t>
+
+        </xpath>
+    </template>
+    <template id="report_delivery_document2" inherit_id="stock.report_delivery_document">
+        <xpath expr="//div[@name='div_outgoing_address']" position="inside">
+            <div name="shipping_method">
+                <span><strong>Shipping Method:</strong></span>
+                <div t-field="o.carrier_id"/>
+            </div>
+        </xpath>
+    </template>
+</odoo>
