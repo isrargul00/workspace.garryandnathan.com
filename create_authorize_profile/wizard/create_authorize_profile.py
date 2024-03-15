@@ -111,7 +111,7 @@ class CreateAuthorizeProfilesWizard(models.TransientModel):
                             "payment": {
                                 "creditCard": {
                                     "cardNumber": self.cc_number,
-                                    "cardCode": self.card_code,
+                                    # "cardCode": self.card_code,
                                     "expirationDate": "%s-%s" % (self.year, self.month),
                                 }
                             }
