@@ -1,13 +1,11 @@
 from odoo import fields, models, _
-from odoo.exceptions import UserError
-from authorizenet import apicontractsv1
-import authorizenet
-from authorizenet.apicontrollers import *
+
+from odoo.addons.payment_authorize.models.authorize_request import AuthorizeAPI
 import os
 import sys
-import random
 import logging
 import datetime
+from uuid import uuid4
 
 _logger = logging.getLogger(__name__)
 
@@ -33,39 +31,47 @@ def year_selection():
         year += 1
     return year_list
 
-pr = '8sLFq96Pv'
-tx = '58EELr6g53j7yU7n'
-PRODUCTION = 'https://api2.authorize.net/xml/v1/request.api'
 
+# pr = '8sLFq96Pv'
+# tx = '58EELr6g53j7yU7n'
 
 class CreateAuthorizeProfilesWizard(models.TransientModel):
     _name = 'create.authorize.profile.wizard'
     _description = 'Create Authorize.net Profile Wizard'
 
     payment_type = fields.Selection([('creditCard', 'Credit/Debit Card'),
-                                     ('bankAccount', 'Electronic Check')])
+                                     ('bankAccount', 'Electronic Check')], default='creditCard')
     first_name = fields.Char()
     last_name = fields.Char()
     street = fields.Char()
+    phone = fields.Char()
     city = fields.Char()
     state = fields.Char()
     zip = fields.Char()
+    country = fields.Char()
     email = fields.Char()
     code = fields.Char()
     cc_number = fields.Char('Credit Card Number', size=16)
     expiration_date = fields.Char(compute='make_date')
     name = fields.Char(compute='make_name')
     partner_id = fields.Many2one('res.partner')
+
     bank_name = fields.Char()
     account_number = fields.Char()
     routing_number = fields.Char()
     name_on_account = fields.Char()
     account_type = fields.Selection([('checking', 'Personal Checking'),
-                                    ('savings', 'Personal Savings'),
-                                    ('businessChecking', 'Business Checking')])
+                                     ('savings', 'Personal Savings'),
+                                     ('businessChecking', 'Business Checking')])
     month = fields.Selection(month_list)
     year = fields.Selection(year_selection())
-    
+
+    def _default_payment_method_id(self):
+        return [('provider_ids', '=',  self.env.ref('payment.payment_provider_authorize').id)]
+
+    payment_method_id = fields.Many2one(
+        string="Payment Method", comodel_name='payment.method',required=True,
+        domain=_default_payment_method_id,)
     def make_date(self):
         if self.month and self.year:
             self.expiration_date = self.year + "-" + self.month
@@ -74,141 +80,107 @@ class CreateAuthorizeProfilesWizard(models.TransientModel):
             print(self.expiration_date)
 
     def create_customer_profile(self):
-        success = False
         try:
-            merchantAuth = authorizenet.apicontractsv1.merchantAuthenticationType()
-            merchantAuth.name = pr
-            merchantAuth.transactionKey = tx
+            # provider = self.env['payment.provider'].search([('id', '=', 4)], limit=1)
+            provider = self.env.ref('payment.payment_provider_authorize').id
+            authorize_API = AuthorizeAPI(provider)
+            success = False
+            profile_dict = {
+                'profile': {
+                    'merchantCustomerId': ('ODOO-%s-%s' % (self.partner_id.id, uuid4().hex[:8]))[:20],
+                    'email': self.email or '',
+                    # "billTo": {
+                    #     "phoneNumber":  self.phone,
+                    #     "firstName": self.first_name,
+                    #     "lastName": self.last_name,
+                    #     "address": self.street,
+                    #     "city": self.city,
+                    #     "state": self.state,
+                    #     "zip": self.zip,
+                    #     "country": self.country,
+                    # },
 
-            createCustomerProfile = authorizenet.apicontractsv1.createCustomerProfileRequest()
-            createCustomerProfile.merchantAuthentication = merchantAuth
-            if self.email:
-                createCustomerProfile.profile = authorizenet.apicontractsv1.customerProfileType(
-                    self.last_name + " : " + str(random.randint(0, 10000)),
-                    self.code, self.email)
-            else:
-                createCustomerProfile.profile = authorizenet.apicontractsv1.customerProfileType(
-                    self.last_name + " : " + str(random.randint(0, 10000)),
-                    self.code)
-
-            profile_controller = createCustomerProfileController(createCustomerProfile)
-            profile_controller.setenvironment(PRODUCTION)
-            profile_controller.execute()
-
-            profile_response = profile_controller.getresponse()
-
-            if profile_response.messages.resultCode == "Ok":
-                print("Successfully created a customer profile with id: %s" % profile_response.customerProfileId)
-            else:
-                print("Failed to create customer payment profile %s" % profile_response.messages.message[0]['text'].text)
-                raise UserError(
-                    _("Failed to create customer profile %s"))
-
+                },
+            }
             if self.payment_type == 'creditCard':
-                creditCard = apicontractsv1.creditCardType()
-                creditCard.cardNumber = self.cc_number
-                creditCard.expirationDate = self.expiration_date
+                profile_dict['profile'].update(
+                    {
+                        "paymentProfiles": {
+                            "customerType": "individual",
+                            "payment": {
+                                "creditCard": {
+                                    "cardNumber": self.cc_number,
+                                    "expirationDate": "%s-%s" % (self.year, self.month)
+                                }
+                            }
+                        },
+                    }
+                )
+            elif self.payment_type == 'bankAccount':
+                profile_dict['profile'].update(
+                    {
+                        "paymentProfiles": {
+                            "customerType": "individual",
+                            "payment": {
+                                "bankAccount": {
+                                    "accountType": self.account_type,
+                                    "routingNumber": self.routing_number,
+                                    "accountNumber": self.account_number,
+                                    "nameOnAccount": self.name_on_account
+                                }
+                            }
+                        },
+                    }
+                )
+            else:
+                return
+            if profile_dict:
+                response = authorize_API._make_request('createCustomerProfileRequest', profile_dict)
+                if not response.get('customerProfileId'):
+                    _logger.warning(
+                        "unable to create customer payment profile, data missing from transaction with "
+                        "partner id: %(partner_id)s",
+                        {
+                            'partner_id': self.partner_id.id,
+                        },
+                    )
+                    return False
+                res = {
+                    'profile_id': response.get('customerProfileId'),
+                    'payment_profile_id': response.get('customerPaymentProfileIdList')[0]
+                }
 
-                payment = apicontractsv1.paymentType()
-                payment.creditCard = creditCard
+                response = authorize_API._make_request('getCustomerPaymentProfileRequest', {
+                    'customerProfileId': res['profile_id'],
+                    'customerPaymentProfileId': res['payment_profile_id'],
+                })
 
-                billTo = apicontractsv1.customerAddressType()
-                billTo.firstName = self.first_name
-                billTo.lastName = self.last_name
-                billTo.address = self.street
-                billTo.city = self.city
-                billTo.state = self.state
-                billTo.zip = self.zip
-
-                profile = apicontractsv1.customerPaymentProfileType()
-                profile.payment = payment
-                profile.billTo = billTo
-
-                createCustomerPaymentProfile = apicontractsv1.createCustomerPaymentProfileRequest()
-                createCustomerPaymentProfile.merchantAuthentication = merchantAuth
-                createCustomerPaymentProfile.paymentProfile = profile
-                print("customerProfileId in create_customer_payment_profile. customerProfileId = %s" % profile_response.customerProfileId)
-                createCustomerPaymentProfile.customerProfileId = str(profile_response.customerProfileId)
-
-                payment_controller = createCustomerPaymentProfileController(createCustomerPaymentProfile)
-                payment_controller.setenvironment(PRODUCTION)
-                payment_controller.execute()
-
-                payment_response = payment_controller.getresponse()
-
-                if payment_response.messages.resultCode == "Ok":
-                    success = True
-                    _logger.info("Successfully created a customer payment profile for %s with id: %s" % (self.partner_id.name, payment_response.customerPaymentProfileId))
-                    token = self.env['payment.token'].create({'name': self.name,
-                                                              'partner_id': self.partner_id.id,
-                                                              'acquirer_id': 4,
-                                                              'acquirer_ref': payment_response.customerPaymentProfileId,
-                                                              'authorize_profile': profile_response.customerProfileId})
+                payment = response.get('paymentProfile', {}).get('payment', {})
+                if 'creditCard' in payment:
+                    # Authorize.net pads the card and account numbers with X's.
+                    res['payment_details'] = payment.get('creditCard', {}).get('cardNumber')[-4:]
                 else:
-                    _logger.info("Failed to create customer payment profile %s" % payment_response.messages.message[0]['text'].text)
-                    raise UserError(
-                        _("Failed to create customer payment profile."))
-                return profile_response, payment_response
-            if self.payment_type == 'bankAccount':
-                bankAccount = apicontractsv1.bankAccountType()
-                bankAccount.accountType = self.account_type
-                bankAccount.routingNumber = self.routing_number
-                bankAccount.accountNumber = self.account_number
-                bankAccount.nameOnAccount = self.name_on_account
-                bankAccount.bankName = self.bank_name
+                    res['payment_details'] = payment.get('bankAccount', {}).get('accountNumber')[-4:]
+                token = self.env['payment.token'].create({
+                    'provider_id':provider,
+                    'payment_method_id': self.payment_method_id.id,
+                    'payment_details': res.get('payment_details'),
+                    'partner_id': self.partner_id.id,
+                    'provider_ref': res.get('payment_profile_id'),
+                    'authorize_profile': res.get('profile_id'),
+                })
 
-                payment = apicontractsv1.paymentType()
-                payment.bankAccount = bankAccount
-
-                billTo = apicontractsv1.customerAddressType()
-                billTo.firstName = self.first_name
-                billTo.lastName = self.last_name
-                billTo.address = self.street
-                billTo.city = self.city
-                billTo.state = self.state
-                billTo.zip = self.zip
-
-                profile = apicontractsv1.customerPaymentProfileType()
-                profile.payment = payment
-                profile.billTo = billTo
-
-                createCustomerPaymentProfile = apicontractsv1.createCustomerPaymentProfileRequest()
-                createCustomerPaymentProfile.merchantAuthentication = merchantAuth
-                createCustomerPaymentProfile.paymentProfile = profile
-                createCustomerPaymentProfile.customerProfileId = str(profile_response.customerProfileId)
-
-                payment_controller = createCustomerPaymentProfileController(createCustomerPaymentProfile)
-                payment_controller.setenvironment(PRODUCTION)
-                payment_controller.execute()
-
-                payment_response = payment_controller.getresponse()
-
-                if payment_response.messages.resultCode == "Ok":
-                    success = True
-                    _logger.info("Successfully created a customer payment profile for %s with id: %s" % (
-                    self.partner_id.name, payment_response.customerPaymentProfileId))
-                    token = self.env['payment.token'].create({'name': self.name,
-                                                              'partner_id': self.partner_id.id,
-                                                              'acquirer_id': 14,
-                                                              'acquirer_ref': payment_response.customerPaymentProfileId,
-                                                              'authorize_profile': profile_response.customerProfileId})
-                else:
-                    _logger.info("Failed to create customer payment profile %s" % payment_response.messages.message[0][
-                        'text'].text)
-                    raise UserError(
-                        _("Failed to create customer payment profile."))
-                return profile_response, payment_response
+            success = True
         finally:
             if self.cc_number:
                 self.clear_cc()
             if success == True:
                 success_animation = {'effect': {'fadeout': 'fast',
-                                                'message': 'Profile Created Sucessfully!.'\
+                                                'message': 'Profile Created Sucessfully!.' \
                                                            ' Page will reload.',
                                                 'img_url': '/web/static/src/img/smile.svg',
                                                 'type': 'rainbow_man'}}
                 return success_animation
-
 
     if os.path.basename(__file__) == os.path.basename(sys.argv[0]):
         create_customer_profile()
@@ -221,7 +193,3 @@ class CreateAuthorizeProfilesWizard(models.TransientModel):
             self.name = "XXXX" + self.cc_number[12:16]
         elif self.payment_type == 'bankAccount':
             self.name = "XXXX" + self.account_number[12:16]
-
-
-
-

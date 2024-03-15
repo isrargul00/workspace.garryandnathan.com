@@ -1,12 +1,14 @@
 {
     'name': "Create Authorize.net Profiles",
     'summary': """Adds functionality to create Authorize.net customer and payment profiles.""",
-    'author': "Tom Lowe",
+    'author': "Israr",
+    'website': "https://www.fiverr.com/isrargul00",
     'version': '1.0',
     'depends': [
-            'base',
-            'payment'],
+        'base',
+        'payment', ],
     'data': [
-            'views/res_partner_inherit.xml',
-            'wizard/create_authorize_profile.xml'],
+        'security/ir.model.access.csv',
+        'views/res_partner_inherit.xml',
+        'wizard/create_authorize_profile.xml'],
 }
