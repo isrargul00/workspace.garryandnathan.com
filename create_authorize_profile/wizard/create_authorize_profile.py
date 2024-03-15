@@ -30,29 +30,13 @@ def year_selection():
         year_list.append((str(year), str(year)))
         year += 1
     return year_list
-
-
-# pr = '8sLFq96Pv'
-# tx = '58EELr6g53j7yU7n'
-
 class CreateAuthorizeProfilesWizard(models.TransientModel):
     _name = 'create.authorize.profile.wizard'
     _description = 'Create Authorize.net Profile Wizard'
 
     payment_type = fields.Selection([('creditCard', 'Credit/Debit Card'),
                                      ('bankAccount', 'Electronic Check')], default='creditCard')
-    first_name = fields.Char()
-    last_name = fields.Char()
-    street = fields.Char()
-    phone = fields.Char()
-    city = fields.Char()
-    state = fields.Char()
-    zip = fields.Char()
-    country = fields.Char()
-    email = fields.Char()
-    code = fields.Char()
     cc_number = fields.Char('Credit Card Number', size=16)
-    card_code = fields.Char('CVV', size=3)
     expiration_date = fields.Char(compute='make_date')
     name = fields.Char(compute='make_name')
     partner_id = fields.Many2one('res.partner')
@@ -68,11 +52,12 @@ class CreateAuthorizeProfilesWizard(models.TransientModel):
     year = fields.Selection(year_selection())
 
     def _default_payment_method_id(self):
-        return [('provider_ids', '=',  self.env.ref('payment.payment_provider_authorize').id)]
+        return [('provider_ids', '=', self.env.ref('payment.payment_provider_authorize').id)]
 
     payment_method_id = fields.Many2one(
-        string="Payment Method", comodel_name='payment.method',required=True,
-        domain=_default_payment_method_id,)
+        string="Payment Method", comodel_name='payment.method', required=True,
+        domain=_default_payment_method_id, )
+
     def make_date(self):
         if self.month and self.year:
             self.expiration_date = self.year + "-" + self.month
@@ -83,24 +68,13 @@ class CreateAuthorizeProfilesWizard(models.TransientModel):
     def create_customer_profile(self):
         try:
             success = False
-            provider = self.env['payment.provider'].search([('id', '=', self.env.ref('payment.payment_provider_authorize').id)], limit=1)
-            # provider = self.env.ref('payment.payment_provider_authorize').id
+            provider = self.env['payment.provider'].search(
+                [('id', '=', self.env.ref('payment.payment_provider_authorize').id)], limit=1)
             authorize_API = AuthorizeAPI(provider)
             profile_dict = {
                 'profile': {
-                    'merchantCustomerId': ('ODOO-%s-%s' % (self.partner_id.id, uuid4().hex[:8]))[:20],
+                    'merchantCustomerId': ('ODOO-%s-%s' % (self.partner_id, uuid4().hex[:8]))[:20],
                     'email': self.email or '',
-                    # "billTo": {
-                    #     "phoneNumber":  self.phone,
-                    #     "firstName": self.first_name,
-                    #     "lastName": self.last_name,
-                    #     "address": self.street,
-                    #     "city": self.city,
-                    #     "state": self.state,
-                    #     "zip": self.zip,
-                    #     "country": self.country,
-                    # },
-
                 },
             }
             if self.payment_type == 'creditCard':
@@ -111,7 +85,6 @@ class CreateAuthorizeProfilesWizard(models.TransientModel):
                             "payment": {
                                 "creditCard": {
                                     "cardNumber": self.cc_number,
-                                    # "cardCode": self.card_code,
                                     "expirationDate": "%s-%s" % (self.year, self.month),
                                 }
                             }
@@ -164,7 +137,7 @@ class CreateAuthorizeProfilesWizard(models.TransientModel):
                 else:
                     res['payment_details'] = payment.get('bankAccount', {}).get('accountNumber')[-4:]
                 token = self.env['payment.token'].create({
-                    'provider_id':provider.id,
+                    'provider_id': provider.id,
                     'payment_method_id': self.payment_method_id.id,
                     'payment_details': res.get('payment_details'),
                     'partner_id': self.partner_id.id,
@@ -172,11 +145,7 @@ class CreateAuthorizeProfilesWizard(models.TransientModel):
                     'authorize_profile': res.get('profile_id'),
                 })
                 success = True
-
-
         finally:
-            if self.cc_number:
-                self.clear_cc()
             if success == True:
                 success_animation = {'effect': {'fadeout': 'fast',
                                                 'message': 'Profile Created Sucessfully!.' \
@@ -187,12 +156,3 @@ class CreateAuthorizeProfilesWizard(models.TransientModel):
 
     if os.path.basename(__file__) == os.path.basename(sys.argv[0]):
         create_customer_profile()
-
-    def clear_cc(self):
-        self.cc_number = self.name
-
-    def make_name(self):
-        if self.payment_type == 'creditCard':
-            self.name = "XXXX" + self.cc_number[12:16]
-        elif self.payment_type == 'bankAccount':
-            self.name = "XXXX" + self.account_number[12:16]

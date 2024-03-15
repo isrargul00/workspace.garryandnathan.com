@@ -16,22 +16,10 @@
                         </group>
                         <group>
                         </group>
-                        <!--                        <group string="Billing Information">-->
-                        <!--                            <field name="email"/>-->
-                        <!--                            <field name="first_name" required="1"/>-->
-                        <!--                            <field name="last_name" required="1"/>-->
-                        <!--                            <field name="phone" required="1"/>-->
-                        <!--                            <field name="street" required="1"/>-->
-                        <!--                            <field name="city" required="1"/>-->
-                        <!--                            <field name="state" required="1"/>-->
-                        <!--                            <field name="zip" required="1"/>-->
-                        <!--                            <field name="country" required="1"/>-->
-                        <!--                        </group>-->
                         <group string="Card Information" invisible="payment_type != 'creditCard'">
                             <field name="cc_number" required="payment_type != 'creditCard'"/>
                             <field name="expiration_date" placeholder="Must be in format YYYY-MM"
                                    invisible="1"/>
-                            <label for="month" string="Expiration Date"/>
                             <label for="month" string="Expiration Date"/>
                             <div>
                                 <label for="month" string="Month"/>
@@ -39,10 +27,8 @@
                                        class="oe_inline" style="width:110%%"/>
                                 <label for="year" string="Year"/>
                                 <field name="year" required="payment_type == 'creditCard' "
-
                                        class="oe_inline"/>
                             </div>
-                            <field name="card_code" required="1"/>
                         </group>
                         <group string="Account Information" invisible="payment_type != 'bankAccount'">
                             <field name="bank_name" required="payment_type == 'bankAccount'"/>
