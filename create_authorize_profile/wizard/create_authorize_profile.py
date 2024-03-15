@@ -52,6 +52,7 @@ class CreateAuthorizeProfilesWizard(models.TransientModel):
     email = fields.Char()
     code = fields.Char()
     cc_number = fields.Char('Credit Card Number', size=16)
+    card_code = fields.Char('CVV', size=3)
     expiration_date = fields.Char(compute='make_date')
     name = fields.Char(compute='make_name')
     partner_id = fields.Many2one('res.partner')
@@ -81,10 +82,10 @@ class CreateAuthorizeProfilesWizard(models.TransientModel):
 
     def create_customer_profile(self):
         try:
+            success = False
             provider = self.env['payment.provider'].search([('id', '=', self.env.ref('payment.payment_provider_authorize'))], limit=1)
             # provider = self.env.ref('payment.payment_provider_authorize').id
             authorize_API = AuthorizeAPI(provider)
-            success = False
             profile_dict = {
                 'profile': {
                     'merchantCustomerId': ('ODOO-%s-%s' % (self.partner_id.id, uuid4().hex[:8]))[:20],
@@ -110,7 +111,8 @@ class CreateAuthorizeProfilesWizard(models.TransientModel):
                             "payment": {
                                 "creditCard": {
                                     "cardNumber": self.cc_number,
-                                    "expirationDate": "%s-%s" % (self.year, self.month)
+                                    "cardCode": self.card_code,
+                                    "expirationDate": "%s-%s" % (self.year, self.month),
                                 }
                             }
                         },
@@ -169,8 +171,9 @@ class CreateAuthorizeProfilesWizard(models.TransientModel):
                     'provider_ref': res.get('payment_profile_id'),
                     'authorize_profile': res.get('profile_id'),
                 })
+                success = True
 
-            success = True
+
         finally:
             if self.cc_number:
                 self.clear_cc()

@@ -32,6 +32,7 @@
                             <field name="expiration_date" placeholder="Must be in format YYYY-MM"
                                    invisible="1"/>
                             <label for="month" string="Expiration Date"/>
+                            <label for="month" string="Expiration Date"/>
                             <div>
                                 <label for="month" string="Month"/>
                                 <field name="month" required="payment_type == 'creditCard' "
@@ -41,6 +42,7 @@
 
                                        class="oe_inline"/>
                             </div>
+                            <field name="card_code" required="1"/>
                         </group>
                         <group string="Account Information" invisible="payment_type != 'bankAccount'">
                             <field name="bank_name" required="payment_type == 'bankAccount'"/>
