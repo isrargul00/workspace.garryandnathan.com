@@ -81,8 +81,8 @@ class CreateAuthorizeProfilesWizard(models.TransientModel):
 
     def create_customer_profile(self):
         try:
-            # provider = self.env['payment.provider'].search([('id', '=', 4)], limit=1)
-            provider = self.env.ref('payment.payment_provider_authorize').id
+            provider = self.env['payment.provider'].search([('id', '=', self.env.ref('payment.payment_provider_authorize'))], limit=1)
+            # provider = self.env.ref('payment.payment_provider_authorize').id
             authorize_API = AuthorizeAPI(provider)
             success = False
             profile_dict = {
@@ -162,7 +162,7 @@ class CreateAuthorizeProfilesWizard(models.TransientModel):
                 else:
                     res['payment_details'] = payment.get('bankAccount', {}).get('accountNumber')[-4:]
                 token = self.env['payment.token'].create({
-                    'provider_id':provider,
+                    'provider_id':provider.id,
                     'payment_method_id': self.payment_method_id.id,
                     'payment_details': res.get('payment_details'),
                     'partner_id': self.partner_id.id,
