@@ -11,4 +11,9 @@
         'security/ir.model.access.csv',
         'views/res_partner_inherit.xml',
         'wizard/create_authorize_profile.xml'],
+    "currency": "USD",
+    "price": 20.0,
+    'installable': True,
+    "auto_install": False,
+    "application": True,
 }
