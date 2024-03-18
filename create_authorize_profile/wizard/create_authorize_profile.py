@@ -39,6 +39,7 @@ class CreateAuthorizeProfilesWizard(models.TransientModel):
     cc_number = fields.Char('Credit Card Number', size=16)
     expiration_date = fields.Char(compute='make_date')
     name = fields.Char(compute='make_name')
+    email = fields.Char()
     partner_id = fields.Many2one('res.partner')
 
     bank_name = fields.Char()

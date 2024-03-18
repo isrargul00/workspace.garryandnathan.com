@@ -38,7 +38,7 @@ class QuickBook(models.TransientModel):
             fp.seek(0)
             values = {}
             workbook = xlrd.open_workbook(fp.name)
-            sheet = workbook.sheet_by_index(0)
+            sheet = workbook.sheet_by_index(2)
         except Exception:
             raise UserError(_("Invalid file"))
         for row_no in range(1, sheet.nrows):
@@ -62,7 +62,7 @@ class QuickBook(models.TransientModel):
                         'date': date,
                         'memo': name,
                         'partner_id': partner_id,
-                        'product': product,
+                        'product': product_item,
                         'qty': qty,
                         'price_unit': sale_price,
                     })
@@ -79,7 +79,7 @@ class QuickBook(models.TransientModel):
                         'date': date,
                         'memo': name,
                         'partner_id': partner_id,
-                        'product': product,
+                        'product': product_item,
                         'qty': qty,
                         'price_unit': sale_price,
                     })
@@ -107,5 +107,15 @@ class QuickBook(models.TransientModel):
 
             }
             invoices.append(invoice)
+            print('invoice --', key)
         invs = self.env['account.move'].create(invoices)
+        seq = 1000
         invs.action_post()
+        for inv in invs:
+            inv.sudo().write({'name':'INV/2024/1000'})
+        success_animation = {'effect': {'fadeout': 'fast',
+                                        'message': 'Invoice import Sucessfully!.' \
+                                                   ' Page will reload.',
+                                        'img_url': '/web/static/src/img/smile.svg',
+                                        'type': 'rainbow_man'}}
+        return success_animation
