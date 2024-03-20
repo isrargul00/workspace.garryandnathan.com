@@ -1,0 +1,23 @@
+<?xml version="1.0" ?>
+<odoo>
+    <record id="email_template_recurring_sale_order" model="mail.template">
+        <field name="name">Recurring Sale Order Template</field>
+        <field name="email_from">{{object.company_id.email or ''}}</field>
+        <field name="partner_to">{{object.notification_user_id.partner_id.id or ''}}</field>
+        <field name="subject">Sale Order Re-occurred</field>
+        <field name="model_id" ref="dev_recurring_sale_order.model_recurring_sale_setting"/>
+        <field name="auto_delete" eval="True"/>
+        <field name="body_html" type="html">
+            <div>
+                <p>Hello, <b><span t-esc="object.notification_user_id and object.notification_user_id.name or ''"/></b></p>
+                <p>This email informs you that Sale Order <b><span t-esc="object.sale_order_id and object.sale_order_id.name or ''"/></b> is re-occurred </p>
+                <p>Access re-occurred Sale order from below button</p>
+                <div style="margin-top:40px;">
+                	<a t-attf-href="{{object.get_reoccurred_order_url()}}" style="background-color: #1abc9c;padding: 20px;text-decoration: none;color: #fff;border-radius: 5px;font-size: 16px;" class="o_default_snippet_text" target="_blank">View Sale Order</a>
+                     <br/><br/>
+                </div>
+                <p>Thank you!</p>
+            </div>
+        </field>
+    </record>
+</odoo>

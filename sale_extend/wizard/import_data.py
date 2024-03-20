@@ -21,10 +21,10 @@ class QuickBook(models.TransientModel):
     name = fields.Char(string="Message", required=True)
     file = fields.Binary(string="Select File")
 
-    def _get_or_create_product(self, product_name,sale):
+    def _get_or_create_product(self, product_name, sale):
         product = self.env['product.product'].search([('name', '=', product_name)], limit=1)
         if not product:
-            product = self.env['product.product'].create({'name': product_name,'list_price':sale})
+            product = self.env['product.product'].create({'name': product_name, 'list_price': sale})
         return product.id
 
     def action_notify(self):
@@ -51,7 +51,7 @@ class QuickBook(models.TransientModel):
                     continue
                 if line[2] in data:
                     row = data[line[2]]
-                    date = xlrd.xldate.xldate_as_datetime(sheet.row(row_no)[1].value,workbook.datemode)
+                    date = xlrd.xldate.xldate_as_datetime(sheet.row(row_no)[1].value, workbook.datemode)
                     name = line[3]
                     partner_id = line[4]
                     product = line[3]
@@ -94,12 +94,13 @@ class QuickBook(models.TransientModel):
             invoice = {
                 'move_type': 'out_invoice',
                 'partner_id': partner.id,
-                'invoice_date':value[0]['date'] or fields.Date.today(),
+                'invoice_date': value[0]['date'] or fields.Date.today(),
                 'cs_invoice_number': key,
+                'check_name': True,
                 'invoice_line_ids': [
                     (0, None, {
                         'name': val.get('memo', ''),
-                        'product_id': self._get_or_create_product(val.get('product'),val.get('price_unit', 0.0)),
+                        'product_id': self._get_or_create_product(val.get('product'), val.get('price_unit', 0.0)),
                         'price_unit': val.get('price_unit', 0.0),
                         'quantity': val.get('qty', 1.0),
                     }) for val in value
@@ -107,15 +108,10 @@ class QuickBook(models.TransientModel):
 
             }
             invoices.append(invoice)
-            print('invoice --', key)
         invs = self.env['account.move'].create(invoices)
-        seq = 1000
         invs.action_post()
-        for inv in invs:
-            inv.sudo().write({'name':'INV/2024/1000'})
         success_animation = {'effect': {'fadeout': 'fast',
-                                        'message': 'Invoice import Sucessfully!.' \
-                                                   ' Page will reload.',
+                                        'message': 'Invoice import Sucessfully!. Page will reload.',
                                         'img_url': '/web/static/src/img/smile.svg',
                                         'type': 'rainbow_man'}}
         return success_animation

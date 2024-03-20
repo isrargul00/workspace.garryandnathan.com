@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<odoo>
+    <data>
+    <!--form-->
+    <record id="from_recurring_sale_order_setting" model="ir.ui.view">
+        <field name="name">from.recurring.sale.setting</field>
+        <field name="model">recurring.sale.setting</field>
+        <field name="arch" type="xml">
+            <form string="Recurring Sale Order Form View">
+                <header>
+                    <button name="process_recurring_sale_order_request" type="object" string='Process' class="oe_highlight" invisible="state == 'new'"/>
+                    <button name="set_to_new" type="object" string='Set to New' class="oe_highlight"
+                           invisible="state != 'processed'"
+                    />
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="view_recurring_sale_orders" type="object" class="oe_stat_button" icon="fa-file"
+                                invisible="recurred_sale_order_data == 0  or state == 'new'">
+                            <field string="Sale order" name="recurred_sale_order_data" widget="statinfo"/>
+                        </button>
+                    </div>
+
+                    <div class="oe_title">
+                        <h1 class="o_row">
+                            <field name="name" placeholder="Purpose of recurring Sale order "
+                                   readonly="state !=  'new'"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="sale_order_id"
+                                   options="{'no_create': True, 'no_quick_create': True, 'no_open': True, 'no_create_edit': True}"
+                                   readonly="state !=  'new'"/>
+                            <field name="partner_id" force_save="1"/>
+                        </group>
+                        <group>
+                            <label for="interval_number"/>
+                            <div>
+                                <field name="interval_number" class="oe_inline"
+                                       readonly="state !=  'new'"/>
+                                <label for="interval_number" string="&#160;" style="margin-right: 2px;"/>
+                                <field name="interval_type" class="oe_inline" readonly="state !=  'new'"/>
+                            </div>
+                            <field name="notification_user_id"
+                                   options="{'no_create': True, 'no_quick_create': True, 'no_open': True, 'no_create_edit': True}"
+                                   readonly="state !=  'new'"/>
+                            <field name="stop_date" readonly="state !=  'new'"/>
+                            <field name="next_execution_date" invisible="1"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="tree_recurring_sale_order_setting" model="ir.ui.view">
+        <field name="name">tree.recurring.sale.setting</field>
+        <field name="model">recurring.sale.setting</field>
+        <field name="arch" type="xml">
+            <tree string="Recurring Sale Order Tree View">
+                <field name="sale_order_id"/>
+                <field name="partner_id"/>
+                <field name="notification_user_id"/>
+            </tree>
+        </field>
+    </record>
+
+    <!--search view-->
+    <record id="search_recurring_sale_order_setting" model="ir.ui.view">
+        <field name="name">Recurring Sale Search</field>
+        <field name="model">recurring.sale.setting</field>
+        <field name="arch" type="xml">
+            <search string="Recurring Event Search">
+                <field name="name"/>
+                <filter string="New" name="new_state" domain="[('state','=','new')]"/>
+                <filter string="Processed" name="processed_state" domain="[('state','=','processed')]"/>
+                <group expand="0" string="Group By">
+                    <filter name="event_id" string="Event" context="{'group_by':'sale_order_id'}"/>
+                    <filter name="notification_user_id" string="Notify To"
+                            context="{'group_by':'notification_user_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!--Action-->
+    <record id="action_recurring_sale_order_setting" model="ir.actions.act_window">
+        <field name="name">Recurring Sale</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">recurring.sale.setting</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <!--Menus-->
+    <menuitem name="Recurring Sale Order"
+              id="menu_recurring_sale_order"
+              parent="sale.menu_sale_config"
+              sequence="1"
+              action="action_recurring_sale_order_setting"/>
+
+    </data>
+</odoo>

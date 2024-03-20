@@ -10,6 +10,7 @@ class AccountMove(models.Model):
                                              [('fedex_service_type', '=', 'FEDEX_GROUND')], limit=1) or False)
     cs_shipping_date = fields.Date(string="Shipping Date")
     cs_invoice_number = fields.Char(string="Invoice Number")
+    check_name = fields.Boolean("check_name")
 
     @api.onchange('invoice_date')
     def onchange_invoice_date(self):
