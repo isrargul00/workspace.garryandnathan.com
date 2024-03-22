@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+
+    <record id="view_stock_package_type_form_inherit_easypost" model="ir.ui.view">
+        <field name="name">stock.package.type.forms.inherit.easypost</field>
+        <field name="model">stock.package.type</field>
+        <field name="inherit_id" ref="stock.stock_package_type_form"/>
+        <field name="arch" type="xml">
+            <field name="barcode" position="after">
+                <field name="is_default"/>
+            </field>
+        </field>
+    </record>
+</odoo>

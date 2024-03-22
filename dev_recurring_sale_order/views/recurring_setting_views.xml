@@ -9,7 +9,7 @@
         <field name="arch" type="xml">
             <form string="Recurring Sale Order Form View">
                 <header>
-                    <button name="process_recurring_sale_order_request" type="object" string='Process' class="oe_highlight" invisible="state == 'new'"/>
+                    <button name="process_recurring_sale_order_request" type="object" string='Process' class="oe_highlight" invisible="state != 'new'"/>
                     <button name="set_to_new" type="object" string='Set to New' class="oe_highlight"
                            invisible="state != 'processed'"
                     />

@@ -10,7 +10,7 @@
     'author': "Israr",
     'website': "",
 
-    'depends': ['sale','purchase_stock', 'account', 'delivery','delivery_fedex','stock_delivery'],
+    'depends': ['sale', 'purchase_stock', 'account', 'delivery', 'delivery_fedex', 'stock_delivery', 'purchase'],
     'data': [
         'security/ir.model.access.csv',
         'wizard/import_data.xml',
@@ -19,6 +19,11 @@
         'report/purchase_order_templates.xml',
         'report/invoice.xml',
         'report/delivery.xml',
+        'views/stock_sale_order.xml',
+        'views/stock_picking.xml',
+        'views/stock_package_type.xml',
+        'views/res_partner.xml',
+        'views/purchase_order.xml',
     ],
     'installable': True,
     'application': True,

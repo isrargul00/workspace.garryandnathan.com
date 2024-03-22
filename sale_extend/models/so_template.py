@@ -35,4 +35,7 @@ class SaleOrder(models.Model):
                 for line in self.so_template_id.line_ids
             ]
 
-
+    @api.depends('partner_id')
+    def _compute_note(self):
+        for record in self:
+            record.note = record.partner_id.note if record.partner_id else False

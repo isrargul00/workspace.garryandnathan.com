@@ -8,13 +8,22 @@ class AccountMove(models.Model):
     cs_shipping_method = fields.Many2one('delivery.carrier', string="Shipping method",
                                          default=lambda self: self.env['delivery.carrier'].search(
                                              [('fedex_service_type', '=', 'FEDEX_GROUND')], limit=1) or False)
-    cs_shipping_date = fields.Date(string="Shipping Date")
+    cs_shipping_date = fields.Date(string="Shipping Date",)
     cs_invoice_number = fields.Char(string="Invoice Number")
     check_name = fields.Boolean("check_name")
 
     @api.onchange('invoice_date')
     def onchange_invoice_date(self):
         self.cs_shipping_date = self.invoice_date
+
+    # def compute_cs_shipping_date(self):
+    #     for rec in self:
+    #         rec.cs_shipping_date = False
+    #         if rec.invoice_line_ids:
+    #             pickings = rec.invoice_line_ids[0].sale_line_ids[0].order_id.picking_ids.filtered(
+    #                 lambda l: l.picking_type_code == 'outgoing')
+    #             if pickings:
+    #                 rec.cs_shipping_date = pickings.scheduled_date
 
     def action_invoice_register_payment(self):
         invoices = self.search(
