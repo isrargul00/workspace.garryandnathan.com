@@ -6,21 +6,22 @@ import sys
 import logging
 import datetime
 from uuid import uuid4
+import re
 
 _logger = logging.getLogger(__name__)
 
-month_list = [('01', 'January'),
-              ('02', 'February'),
-              ('03', 'March'),
-              ('04', 'April'),
-              ('05', 'May'),
-              ('06', 'June'),
-              ('07', 'July'),
-              ('08', 'August'),
-              ('09', 'September'),
-              ('10', 'October'),
-              ('11', 'November'),
-              ('12', 'December')]
+month_list = [('01', '1-January'),
+              ('02', '2-February'),
+              ('03', '3-March'),
+              ('04', '4-April'),
+              ('05', '5-May'),
+              ('06', '6-June'),
+              ('07', '7-July'),
+              ('08', '8-August'),
+              ('09', '9-September'),
+              ('10', '10-October'),
+              ('11', '11-November'),
+              ('12', '12-December')]
 
 
 def year_selection():
@@ -30,6 +31,8 @@ def year_selection():
         year_list.append((str(year), str(year)))
         year += 1
     return year_list
+
+
 class CreateAuthorizeProfilesWizard(models.TransientModel):
     _name = 'create.authorize.profile.wizard'
     _description = 'Create Authorize.net Profile Wizard'
@@ -51,6 +54,8 @@ class CreateAuthorizeProfilesWizard(models.TransientModel):
                                      ('businessChecking', 'Business Checking')])
     month = fields.Selection(month_list)
     year = fields.Selection(year_selection())
+
+    allow_update = fields.Boolean("Allow update duplicate record")
 
     def _default_payment_method_id(self):
         return [('provider_ids', '=', self.env.ref('payment.payment_provider_authorize').id)]
@@ -74,7 +79,7 @@ class CreateAuthorizeProfilesWizard(models.TransientModel):
             authorize_API = AuthorizeAPI(provider)
             profile_dict = {
                 'profile': {
-                    'merchantCustomerId': ('ODOO-%s-%s' % (self.partner_id, uuid4().hex[:8]))[:20],
+                    'merchantCustomerId': ('ODOO-%s-%s' % (self.partner_id.name, uuid4().hex[:8]))[:20],
                     'email': self.email or '',
                 },
             }
@@ -112,15 +117,29 @@ class CreateAuthorizeProfilesWizard(models.TransientModel):
                 return
             if profile_dict:
                 response = authorize_API._make_request('createCustomerProfileRequest', profile_dict)
+                numbers = False
                 if not response.get('customerProfileId'):
-                    _logger.warning(
-                        "unable to create customer payment profile, data missing from transaction with "
-                        "partner id: %(partner_id)s",
-                        {
-                            'partner_id': self.partner_id.id,
-                        },
-                    )
-                    return False
+                    body = response.get('err_msg')
+                    if not self.allow_update:
+                        self.partner_id.message_post(
+                            body=_(body)
+                        )
+                        return {'effect': {'fadeout': 'fast',
+                                           'message': body,
+                                           # 'img_url': '/web/static/src/img/smile.svg',
+                                           'type': 'rainbow_man'}}
+
+                    numbers = re.findall(r'\d+', body)
+
+                    # Converting the extracted numbers from string to integers
+                    numbers = [int(num) for num in numbers]
+                if numbers:
+                    d_data ={
+                        'customerProfileId': "".join(numbers),
+                        'paymentProfiles':profile_dict['profile']['paymentProfiles'],
+                    }
+                    response = authorize_API._make_request('updateCustomerPaymentProfileRequest', d_data)
+
                 res = {
                     'profile_id': response.get('customerProfileId'),
                     'payment_profile_id': response.get('customerPaymentProfileIdList')[0]
@@ -133,7 +152,6 @@ class CreateAuthorizeProfilesWizard(models.TransientModel):
 
                 payment = response.get('paymentProfile', {}).get('payment', {})
                 if 'creditCard' in payment:
-                    # Authorize.net pads the card and account numbers with X's.
                     res['payment_details'] = payment.get('creditCard', {}).get('cardNumber')[-4:]
                 else:
                     res['payment_details'] = payment.get('bankAccount', {}).get('accountNumber')[-4:]
@@ -145,6 +163,11 @@ class CreateAuthorizeProfilesWizard(models.TransientModel):
                     'provider_ref': res.get('payment_profile_id'),
                     'authorize_profile': res.get('profile_id'),
                 })
+
+                msg = f"token has been created with card XXXX {res.get('payment_details')}"
+                self.partner_id.message_post(
+                    body=_(msg)
+                )
                 success = True
         finally:
             if success == True:

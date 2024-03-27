@@ -2,13 +2,34 @@
 <odoo>
     <data>
 
+         <record id="view_out_invoice_tree" model="ir.ui.view">
+            <field name="name">account.out.invoice.tree</field>
+            <field name="model">account.move</field>
+            <field name="inherit_id" ref="account.view_out_invoice_tree"/>
+            <field name="arch" type="xml">
+                <xpath expr="//tree" position="inside">
+                    <field name="has_payment_token"/>
+                </xpath>
+            </field>
+        </record>
+
+        <record id="sale_order_tree" model="ir.ui.view">
+            <field name="name">amazon.order.tree</field>
+            <field name="model">sale.order</field>
+            <field name="inherit_id" ref="sale.sale_order_tree"/>
+            <field name="arch" type="xml">
+                <xpath expr="//tree" position="inside">
+                    <field name="has_payment_token"/>
+                </xpath>
+            </field>
+        </record>
         <record id="view_quant_package_weight_form" model="ir.ui.view">
             <field name="name">stock.quant.package.weight.form</field>
             <field name="model">stock.quant.package</field>
             <field name="inherit_id" ref="stock.view_quant_package_form"/>
             <field name="arch" type="xml">
                 <field name="pack_date" position="before">
-                    <field name="tacking_number" />
+                    <field name="tacking_number"/>
                 </field>
             </field>
         </record>

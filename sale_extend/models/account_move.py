@@ -12,6 +12,8 @@ class AccountMove(models.Model):
     cs_invoice_number = fields.Char(string="Invoice Number")
     check_name = fields.Boolean("check_name")
 
+    has_payment_token = fields.Boolean(related='partner_id.has_payment_token', string="Available Payment")
+
     @api.onchange('invoice_date')
     def onchange_invoice_date(self):
         self.cs_shipping_date = self.invoice_date

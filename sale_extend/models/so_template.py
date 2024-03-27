@@ -9,6 +9,7 @@ class SOTemplate(models.Model):
     line_ids = fields.One2many('so.template.line', 'so_id', 'Lines')
 
 
+
 class SOTemplateLines(models.Model):
     _name = 'so.template.line'
     _description = 'so.template.line'
@@ -22,6 +23,7 @@ class SaleOrder(models.Model):
     _inherit = 'sale.order'
 
     so_template_id = fields.Many2one('so.template')
+    has_payment_token = fields.Boolean(related='partner_id.has_payment_token', string="Available Payment")
 
     @api.onchange('so_template_id')
     def _onnchange_so_template_id(self):
