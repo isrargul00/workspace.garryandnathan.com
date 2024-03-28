@@ -10,7 +10,8 @@ class SaleAdvancePaymentInv(models.TransientModel):
     def create_invoices(self):
         self._check_amount_is_positive()
         invoices = self._create_invoices(self.sale_order_ids)
-        pickings = self.sale_order_ids.picking_ids.filtered(lambda l: l.picking_type_code == 'outgoing')
+        pickings = self.sale_order_ids.picking_ids.filtered(
+            lambda l: l.picking_type_code == 'outgoing' and l.state != 'cancel')
         if len(pickings) <= 1:
             pickings = pickings[0]
         if pickings:
