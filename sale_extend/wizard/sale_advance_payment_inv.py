@@ -11,6 +11,8 @@ class SaleAdvancePaymentInv(models.TransientModel):
         self._check_amount_is_positive()
         invoices = self._create_invoices(self.sale_order_ids)
         pickings = self.sale_order_ids.picking_ids.filtered(lambda l: l.picking_type_code == 'outgoing')
+        if len(pickings) <= 1:
+            pickings = pickings[0]
         if pickings:
             invoices.write({
                 'cs_shipping_date': pickings.scheduled_date
